@@ -103,149 +103,6 @@ function App() {
     const [previewDimensions, setPreviewDimensions] = React.useState({ width: 0, height: 0 });
     const previewContainerRef = React.useRef(null);
 
-    // Add new state variables for grid settings
-    const [gridSettings, setGridSettings] = React.useState({
-        enabled: false,
-        snapEnabled: false,
-        divisions: 10,
-        subdivisions: 2,
-        snapThreshold: 0.01
-    });
-
-    const GridPanel = () => (
-        <div className="grid-panel">
-            <div className="grid-controls">
-                <label>
-                    <input
-                        type="checkbox"
-                        checked={gridSettings.enabled}
-                        onChange={e => setGridSettings(prev => ({
-                            ...prev,
-                            enabled: e.target.checked
-                        }))}
-                    /> Show Grid
-                </label>
-                <label>
-                    <input
-                        type="checkbox"
-                        checked={gridSettings.snapEnabled}
-                        onChange={e => setGridSettings(prev => ({
-                            ...prev,
-                            snapEnabled: e.target.checked
-                        }))}
-                    /> Enable Snapping
-                </label>
-                <div>
-                    <label>Divisions: </label>
-                    <input
-                        type="number"
-                        min="1"
-                        max="20"
-                        value={gridSettings.divisions}
-                        onChange={e => setGridSettings(prev => ({
-                            ...prev,
-                            divisions: parseInt(e.target.value)
-                        }))}
-                    />
-                </div>
-                <div>
-                    <label>Subdivisions: </label>
-                    <input
-                        type="number"
-                        min="1"
-                        max="10"
-                        value={gridSettings.subdivisions}
-                        onChange={e => setGridSettings(prev => ({
-                            ...prev,
-                            subdivisions: parseInt(e.target.value)
-                        }))}
-                    />
-                </div>
-                <div className="snap-actions">
-                    <button onClick={snapToCenter}>Center in Parent</button>
-                    <button onClick={() => snapToEdge('horizontal')}>Center Horizontally</button>
-                    <button onClick={() => snapToEdge('vertical')}>Center Vertically</button>
-                </div>
-            </div>
-        </div>
-    );
-
-    const snapToGrid = (value) => {
-        if (!gridSettings.snapEnabled) return value;
-        
-        const gridSize = 1 / gridSettings.divisions;
-        const subGridSize = gridSize / gridSettings.subdivisions;
-        
-        const snapPoints = [];
-        for (let i = 0; i <= gridSettings.divisions; i++) {
-            const majorLine = i * gridSize;
-            snapPoints.push(majorLine);
-            
-            if (i < gridSettings.divisions) {
-                for (let j = 1; j < gridSettings.subdivisions; j++) {
-                    snapPoints.push(majorLine + (j * subGridSize));
-                }
-            }
-        }
-        
-        const closest = snapPoints.reduce((prev, curr) => 
-            Math.abs(curr - value) < Math.abs(prev - value) ? curr : prev
-        );
-        
-        return Math.abs(closest - value) < gridSettings.snapThreshold ? closest : value;
-    };
-
-    const snapToCenter = () => {
-        if (!selectedElementId) return;
-        
-        setUiElements(prev => prev.map(el => {
-            if (el.id !== selectedElementId) return el;
-            
-            const [minX, minY] = el.anchorMin.split(' ').map(Number);
-            const [maxX, maxY] = el.anchorMax.split(' ').map(Number);
-            const width = maxX - minX;
-            const height = maxY - minY;
-            
-            const newMinX = 0.5 - (width / 2);
-            const newMinY = 0.5 - (height / 2);
-            
-            return {
-                ...el,
-                anchorMin: `${newMinX.toFixed(6)} ${newMinY.toFixed(6)}`,
-                anchorMax: `${(newMinX + width).toFixed(6)} ${(newMinY + height).toFixed(6)}`
-            };
-        }));
-    };
-
-    const snapToEdge = (direction) => {
-        if (!selectedElementId) return;
-        
-        setUiElements(prev => prev.map(el => {
-            if (el.id !== selectedElementId) return el;
-            
-            const [minX, minY] = el.anchorMin.split(' ').map(Number);
-            const [maxX, maxY] = el.anchorMax.split(' ').map(Number);
-            
-            if (direction === 'horizontal') {
-                const width = maxX - minX;
-                const newMinX = 0.5 - (width / 2);
-                return {
-                    ...el,
-                    anchorMin: `${newMinX.toFixed(6)} ${minY}`,
-                    anchorMax: `${(newMinX + width).toFixed(6)} ${maxY}`
-                };
-            } else {
-                const height = maxY - minY;
-                const newMinY = 0.5 - (height / 2);
-                return {
-                    ...el,
-                    anchorMin: `${minX} ${newMinY.toFixed(6)}`,
-                    anchorMax: `${maxX} ${(newMinY + height).toFixed(6)}`
-                };
-            }
-        }));
-    };
-
     // Add resize handler
     const updatePreviewDimensions = React.useCallback(() => {
         if (previewContainerRef.current) {
@@ -477,14 +334,16 @@ private void cmdCompileUI(ConsoleSystem.Arg arg)
         e.stopPropagation();
         
         const rect = previewContainerRef.current.getBoundingClientRect();
-        const mouseX = (e.clientX - rect.left) / rect.width;
-        const mouseY = 1 - ((e.clientY - rect.top) / rect.height); // Convert to Rust coordinates (0 at bottom, 1 at top)
+        const mouseX = e.clientX - rect.left;
+        const mouseY = e.clientY - rect.top;
         
-        const startMouseX = (dragInfo.startX - rect.left) / rect.width;
-        const startMouseY = 1 - ((dragInfo.startY - rect.top) / rect.height);
+        // Invert Y coordinate (1 at bottom, 0 at top)
+        const rustY = mouseY / rect.height;
+        const startRustY = (dragInfo.startY - rect.top) / rect.height;
         
-        const dx = mouseX - startMouseX;
-        const dy = mouseY - startMouseY;
+        // Calculate deltas, Y is now inverted
+        const dx = (mouseX - (dragInfo.startX - rect.left)) / rect.width;
+        const dy = -(rustY - startRustY); // Negative to invert the direction
 
         setUiElements(elements => elements.map(el => {
             if (el.id !== dragInfo.elementId) return el;
@@ -525,20 +384,13 @@ private void cmdCompileUI(ConsoleSystem.Arg arg)
             newMaxX = Math.max(0, Math.min(1, newMaxX));
             newMaxY = Math.max(0, Math.min(1, newMaxY));
 
-            const newCoords = {
-                newMinX: snapToGrid(newMinX),
-                newMinY: snapToGrid(newMinY),
-                newMaxX: snapToGrid(newMaxX),
-                newMaxY: snapToGrid(newMaxY)
-            };
-
             return {
                 ...el,
-                anchorMin: `${newCoords.newMinX.toFixed(6)} ${newCoords.newMinY.toFixed(6)}`,
-                anchorMax: `${newCoords.newMaxX.toFixed(6)} ${newCoords.newMaxY.toFixed(6)}`
+                anchorMin: `${newMinX.toFixed(6)} ${newMinY.toFixed(6)}`,
+                anchorMax: `${newMaxX.toFixed(6)} ${newMaxY.toFixed(6)}`
             };
         }));
-    }, [dragInfo, gridSettings]);
+    }, [dragInfo]);
 
     const handleMouseUp = React.useCallback(() => {
         setDragInfo(null);
@@ -640,7 +492,7 @@ private void cmdCompileUI(ConsoleSystem.Arg arg)
         
         return {
             left: `${minX * 100}%`,
-            bottom: `${minY * 100}%`,  // Use bottom instead of top
+            top: `${(1 - maxY) * 100}%`,  // Invert Y coordinates
             width: `${(maxX - minX) * 100}%`,
             height: `${(maxY - minY) * 100}%`
         };
@@ -661,7 +513,7 @@ private void cmdCompileUI(ConsoleSystem.Arg arg)
                 style={{
                     position: 'absolute',
                     ...position,
-                    top: 'auto', // Remove top positioning
+                    bottom: 'auto', // Remove bottom positioning
                     backgroundColor: hasBackground ? 
                         parseRustColorToRgba(isButton ? element.backgroundColor : element.color) : 
                         'transparent',
@@ -695,63 +547,12 @@ private void cmdCompileUI(ConsoleSystem.Arg arg)
         return `rgba(${Math.round(r * 255)}, ${Math.round(g * 255)}, ${Math.round(b * 255)}, ${a})`;
     };
 
-    const handleColorApply = (target) => {
-        if (!selectedElementId) return;
-
-        const rustColor = convertHexToRustColor(color);
-        const elementType = ELEMENT_TYPES[selectedEl.type];
-
-        if (target === 'background') {
-            if (elementType.properties.backgroundColor) {
-                updateSelectedElement('backgroundColor', rustColor);
-            } else if (elementType.properties.color) {
-                updateSelectedElement('color', rustColor);
-            }
-        } else if (target === 'text') {
-            if (elementType.properties.textColor) {
-                updateSelectedElement('textColor', rustColor);
-            } else if (elementType.properties.color && elementType.components.includes('Text')) {
-                updateSelectedElement('color', rustColor);
-            }
-        }
-    };
-
     const selectedEl = uiElements.find(el => el.id === selectedElementId) || {};
-
-    const GridLines = () => {
-        if (!gridSettings.enabled) return null;
-
-        const lines = [];
-        const gridSize = 1 / gridSettings.divisions;
-        
-        for (let i = 1; i < gridSettings.divisions; i++) {
-            const pos = `${i * gridSize * 100}%`;
-            
-            // Major lines
-            lines.push(
-                <div key={`v${i}`} className="grid-line major vertical" style={{ left: pos }} />,
-                <div key={`h${i}`} className="grid-line major horizontal" style={{ bottom: pos }} />
-            );
-            
-            // Subdivision lines
-            if (i < gridSettings.divisions) {
-                for (let j = 1; j < gridSettings.subdivisions; j++) {
-                    const subPos = `${(i * gridSize + j * gridSize / gridSettings.subdivisions) * 100}%`;
-                    lines.push(
-                        <div key={`vs${i}${j}`} className="grid-line minor vertical" style={{ left: subPos }} />,
-                        <div key={`hs${i}${j}`} className="grid-line minor horizontal" style={{ bottom: subPos }} />
-                    );
-                }
-            }
-        }
-        
-        return <>{lines}</>;
-    };
 
     return (
         <div className="app">
+            <div className="background-container" onClick={() => setSelectedElementId(null)} />
             <div className="element-preview-container" ref={previewContainerRef}>
-                <GridLines />
                 {uiElements.map(element => renderElement(element))}
             </div>
             <div className="right-panel">
@@ -876,8 +677,6 @@ private void cmdCompileUI(ConsoleSystem.Arg arg)
                         </div>
                     )}
                 </div>
-
-                <GridPanel />
 
                 <div className="compiler-container">
                     <label>Compiler Output</label>

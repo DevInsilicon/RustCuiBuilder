@@ -1,0 +1,477 @@
+body {
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    background-color: #1a1a1a;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+}
+
+.app {
+    position: relative;
+    z-index: 1;
+    color: #fff;
+    min-height: 100vh;
+    display: flex;
+}
+
+.background-container {
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: calc(100vw - 300px);
+    height: 100vh;
+    background-image: url('./assets/background.png');
+    background-size: contain;
+    background-position: center;
+    background-repeat: no-repeat;
+    z-index: 0;
+}
+
+.right-panel {
+    position: fixed;
+    right: 0;
+    top: 0;
+    width: 300px;
+    height: 100vh;
+    background-color: #2a2a2a;
+    padding: 15px;
+    box-sizing: border-box;
+    overflow-y: auto;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+/* Element Buttons */
+.element-buttons {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+}
+
+.element-button {
+    background: #3a3a3a;
+    color: #fff;
+    border: none;
+    padding: 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.element-button:hover {
+    background: #4a4a4a;
+}
+
+/* Scene Hierarchy */
+.scene-hierarchy {
+    background: rgba(0, 0, 0, 0.2);
+    padding: 12px;
+    border-radius: 8px;
+}
+
+.hierarchy-item {
+    padding: 6px 8px;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+    user-select: none;
+}
+
+.hierarchy-item.dragging {
+    opacity: 0.5;
+}
+
+.hierarchy-item.drop-target {
+    background: rgba(0, 255, 0, 0.1);
+    border: 1px dashed rgba(0, 255, 0, 0.5);
+}
+
+.hierarchy-item:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.hierarchy-item.selected {
+    background: rgba(0, 255, 0, 0.2);
+}
+
+/* Property Editor */
+.property-editor {
+    background: rgba(0, 0, 0, 0.2);
+    padding: 12px;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.property-editor label {
+    color: #fff;
+    font-size: 12px;
+    margin-bottom: 2px;
+}
+
+.property-editor input {
+    background: #3a3a3a;
+    border: 1px solid #4a4a4a;
+    color: #fff;
+    padding: 6px 8px;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.property-editor input:focus {
+    outline: none;
+    border-color: #6a6a6a;
+}
+
+.property-editor select {
+    background: #3a3a3a;
+    border: 1px solid #4a4a4a;
+    color: #fff;
+    padding: 6px 8px;
+    border-radius: 4px;
+    font-size: 14px;
+    width: 100%;
+}
+
+.property-editor select:focus {
+    outline: none;
+    border-color: #6a6a6a;
+}
+
+/* Color Picker Container */
+.color-picker-container {
+    background: rgba(0, 0, 0, 0.2);
+    padding: 12px;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.color-picker-label {
+    color: #fff;
+    font-size: 12px;
+    margin-bottom: 4px;
+}
+
+.picker-wrapper {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+    padding: 3px 0;
+    position: relative;
+    height: 150px;
+}
+
+/* Fix for IroJS color picker */
+.picker-wrapper > div {
+    position: relative !important;
+    transform: none !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 15px !important;
+}
+
+.picker-wrapper .iro__slider {
+    background: black !important;
+}
+
+.brightness-slider {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    height: 150px;
+    position: relative;
+    width: 20px;
+    margin-left: 15px; /* Add margin to fix horizontal spacing */
+}
+
+.brightness-slider label {
+    position: absolute;
+    top: -20px;
+    left: -60px; /* Changed from -85px to -60px */
+    width: 100px;
+    transform: rotate(-90deg) translateY(-40px);
+    transform-origin: left top;
+    color: #fff;
+    font-size: 12px;
+    text-align: right;
+    white-space: nowrap;
+}
+
+.brightness-slider input[type="range"] {
+    width: 150px;
+    height: 20px;
+    -webkit-appearance: none;
+    background: linear-gradient(to right, #000000, #ffffff);
+    border-radius: 3px;
+    outline: none;
+    position: absolute;
+    left: -65px; /* Adjust horizontal position */
+    top: 65px; /* Center vertically */
+    transform: rotate(270deg);
+}
+
+.brightness-slider input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #fff;
+    cursor: pointer;
+    border: 2px solid #4a4a4a;
+}
+
+.brightness-slider input[type="range"]::-moz-range-thumb {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #fff;
+    cursor: pointer;
+    border: 2px solid #4a4a4a;
+}
+
+/* Recent Colors */
+.recent-colors {
+    width: 100%;
+}
+
+.color-swatches {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+    margin-top: 4px;
+}
+
+.color-swatch {
+    aspect-ratio: 1;
+    border-radius: 4px;
+    cursor: pointer;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: transform 0.2s, border-color 0.2s;
+}
+
+.color-swatch:hover {
+    transform: scale(1.1);
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+/* Color Actions */
+.color-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.color-action-button {
+    flex: 1;
+    padding: 6px 8px;
+    border: none;
+    border-radius: 4px;
+    background: #3a3a3a;
+    color: #fff;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    font-size: 12px;
+}
+
+.color-action-button:hover {
+    background: #4a4a4a;
+}
+
+/* UI Elements */
+.element-preview-container {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: calc(100vw - 300px);
+    height: 100vh;
+    pointer-events: none;
+    /* Add background settings */
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
+.ui-element {
+    position: absolute;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    background: rgba(255, 255, 255, 0.1);
+    pointer-events: all;
+    cursor: move;
+    min-width: 20px;
+    min-height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    user-select: none;
+    transform-origin: bottom left;
+}
+
+.ui-element.selected {
+    border: 1px solid #00ff00;
+    box-shadow: 0 0 0 1px #00ff00;
+}
+
+/* Resize Handles */
+.resize-handle {
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    background: #00ff00;
+    border: 1px solid #fff;
+    pointer-events: all;
+}
+
+.resize-handle.nw { top: -4px; left: -4px; cursor: nw-resize; }
+.resize-handle.ne { top: -4px; right: -4px; cursor: ne-resize; }
+.resize-handle.sw { bottom: -4px; left: -4px; cursor: sw-resize; }
+.resize-handle.se { bottom: -4px; right: -4px; cursor: se-resize; }
+
+/* Compiler Output */
+.compiler-container {
+    background: rgba(0, 0, 0, 0.2);
+    padding: 12px;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.compile-button {
+    background: #3a3a3a;
+    color: #fff;
+    border: none;
+    padding: 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.compile-button:hover {
+    background: #4a4a4a;
+}
+
+.snippet-output {
+    width: 100%;
+    height: 120px;
+    resize: none;
+    background: #3a3a3a;
+    color: #fff;
+    border: 1px solid #4a4a4a;
+    border-radius: 4px;
+    padding: 8px;
+    font-family: monospace;
+    font-size: 12px;
+    line-height: 1.4;
+}
+
+.snippet-output:focus {
+    outline: none;
+    border-color: #6a6a6a;
+}
+
+/* Modal Styles */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.75);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background: #2a2a2a;
+    padding: 20px;
+    border-radius: 8px;
+    min-width: 300px;
+}
+
+.modal-content h3 {
+    margin: 0 0 15px 0;
+    color: #fff;
+}
+
+.modal-content input {
+    width: 100%;
+    background: #3a3a3a;
+    border: 1px solid #4a4a4a;
+    color: #fff;
+    padding: 8px;
+    border-radius: 4px;
+    margin-bottom: 15px;
+}
+
+.modal-content input:focus {
+    outline: none;
+    border-color: #6a6a6a;
+}
+
+.modal-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+}
+
+.modal-actions button {
+    background: #3a3a3a;
+    color: #fff;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.modal-actions button:hover {
+    background: #4a4a4a;
+}
+
+/* Opacity Slider */
+.opacity-slider {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 8px 0;
+}
+
+.opacity-slider label {
+    color: #fff;
+    font-size: 12px;
+}
+
+.opacity-slider input[type="range"] {
+    width: 100%;
+    height: 6px;
+    -webkit-appearance: none;
+    background: #3a3a3a;
+    border-radius: 3px;
+    outline: none;
+}
+
+.opacity-slider input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #fff;
+    cursor: pointer;
+}
+
+.opacity-slider input[type="range"]::-moz-range-thumb {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #fff;
+    cursor: pointer;
+    border: none;
+}

@@ -12,14 +12,14 @@ class MainApplication {
 	windowInstance;
 
 	pages = {
-		main: "./Pages/MainPage/index.html",
+		main: "./Application/Pages/MainPage/index.html",
 	};
 
 	constructor() {
 		this.mainWindow = () => {
 			this.windowInstance = new BrowserWindow({
-				width: 800,
-				height: 600,
+				width: 1920,  // Updated from 1900
+				height: 1080, // Updated from 900
 				darkTheme: true,
 				webPreferences: {
 					nodeIntegration: false,
