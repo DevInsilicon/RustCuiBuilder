@@ -1,0 +1,28 @@
+{
+  "name": "rustcuibuilder",
+  "version": "1.0.0",
+  "description": "Build Rust GUIs with a simple GUI based program.",
+  "main": "index.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/DevInsilicon/RustCuiBuilder.git"
+  },
+  "keywords": [
+    "Rust",
+    "Videogame",
+    "ElectronJS",
+    "NodeJS"
+  ],
+  "author": "Insilicon / Jwwwwb",
+  "license": "GPL-3.0-or-later",
+  "bugs": {
+    "url": "https://github.com/DevInsilicon/RustCuiBuilder/issues"
+  },
+  "homepage": "https://github.com/DevInsilicon/RustCuiBuilder#readme",
+  "devDependencies": {
+    "electron": "^34.0.0"
+  }
+}
